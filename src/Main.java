@@ -3,6 +3,8 @@ import com.jmatio.types.MLArray;
 import com.jmatio.types.MLNumericArray;
 import com.jmatio.types.MLStructure;
 import org.la4j.matrix.sparse.CCSMatrix;
+import org.la4j.matrix.sparse.CRSMatrix;
+import org.la4j.operation.MatrixVectorOperation;
 import org.la4j.operation.ooplace.OoPlaceMatrixByVectorMultiplication;
 import org.la4j.vector.DenseVector;
 import org.la4j.vector.dense.BasicVector;
@@ -22,7 +24,7 @@ public class Main {
         MLNumericArray bigA = (MLNumericArray) structure.getField("A");
         MLNumericArray smallB = (MLNumericArray) structure.getField("b");
 
-        CCSMatrix matrix = new CCSMatrix(bigA.getM(), bigA.getN());
+        CRSMatrix matrix = new CRSMatrix(bigA.getM(), bigA.getN());
         for (int i=0; i<bigA.getM(); i++) {
             for (int j = 0; j<bigA.getN(); j++) {
                 double value = bigA.get(i, j).doubleValue();
@@ -32,13 +34,17 @@ public class Main {
             }
         }
 
-        printBigA(matrix, bigA.getN(), bigA.getM());
-        printSmallB();
-
         double tas [] = new double[smallB.getM()];
+        for (int i=0; i<smallB.getM(); i++)
+            tas[i] = smallB.get(i).doubleValue();
         DenseVector vector = new BasicVector(tas);
 
-        OoPlaceMatrixByVectorMultiplication test = new OoPlaceMatrixByVectorMultiplication();
+        //printBigA(matrix, bigA.getN(), bigA.getM());
+        //printSmallB(vector);
+
+
+
+        //MatrixVectorOperation test = new OoPlaceMatrixByVectorMultiplication();
         //System.out.println(test.apply(matrix, vector));
     }
 
@@ -53,8 +59,8 @@ public class Main {
         }
     }
 
-    static private void printSmallB(double [] vals) {
-        for (int i=0; i<vals.length; i++)
-            System.out.println((i + 1) + " - " + vals[i]);
+    static private void printSmallB(DenseVector vals) {
+        for (int i=0; i<vals.length(); i++)
+            System.out.println((i + 1) + " - " + vals.get(i));
     }
 }
