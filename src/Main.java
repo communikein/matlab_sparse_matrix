@@ -2,6 +2,7 @@ import com.jmatio.io.MatFileReader;
 import com.jmatio.types.MLArray;
 import com.jmatio.types.MLNumericArray;
 import com.jmatio.types.MLStructure;
+
 import org.la4j.matrix.sparse.CCSMatrix;
 import org.la4j.matrix.sparse.CRSMatrix;
 import org.la4j.operation.MatrixVectorOperation;
@@ -17,12 +18,11 @@ import java.util.Map;
  */
 public class Main {
     public static void main(String[] args) throws IOException {
-        MatFileReader reader = new MatFileReader("poisson2D.mat");
+        MatFileReader reader = new MatFileReader("poisson3Db.mat");
         Map<String, MLArray> matlabMatrix = reader.getContent();
 
         MLStructure structure = (MLStructure) matlabMatrix.get("Problem");
         MLNumericArray bigA = (MLNumericArray) structure.getField("A");
-        MLNumericArray smallB = (MLNumericArray) structure.getField("b");
 
         CRSMatrix matrix = new CRSMatrix(bigA.getM(), bigA.getN());
         for (int i=0; i<bigA.getM(); i++) {
@@ -34,18 +34,15 @@ public class Main {
             }
         }
 
-        double tas [] = new double[smallB.getM()];
-        for (int i=0; i<smallB.getM(); i++)
-            tas[i] = smallB.get(i).doubleValue();
-        DenseVector vector = new BasicVector(tas);
+        double x [] = new double[bigA.getM()];
+        for (int i=0; i<x.length; i++)
+            x[i] = 1;
+        DenseVector vector = new BasicVector(x);
 
-        //printBigA(matrix, bigA.getN(), bigA.getM());
-        //printSmallB(vector);
+        MatrixVectorOperation test = new OoPlaceMatrixByVectorMultiplication();
+        DenseVector smallB = (DenseVector) test.apply(matrix, vector);
 
-
-
-        //MatrixVectorOperation test = new OoPlaceMatrixByVectorMultiplication();
-        //System.out.println(test.apply(matrix, vector));
+        printSmallB(smallB);
     }
 
     static private void printBigA(CCSMatrix matrix, int rows, int cols) {
