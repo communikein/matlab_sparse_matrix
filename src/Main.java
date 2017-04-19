@@ -48,6 +48,8 @@ public class Main {
             double val = bigA.get(rowsIndex[i], colsIndex[i]);
 
             matrix.set(rowsIndex[i], colsIndex[i], val);
+            if (i % 100 == 0)
+                printLog("## " + (i / rowsIndex.length * 100) + "%");
         }
         printLog("Completed.");
 
