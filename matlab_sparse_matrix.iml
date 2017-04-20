@@ -10,5 +10,7 @@
     <orderEntry type="library" name="org.la4j:la4j:0.6.0" level="project" />
     <orderEntry type="library" name="parallelcolt-0.9.4" level="project" />
     <orderEntry type="library" name="com.diffplug.matsim:matfilerw:3.0.0" level="project" />
+    <orderEntry type="library" name="colt" level="project" />
+    <orderEntry type="library" name="concurrent" level="project" />
   </component>
 </module>

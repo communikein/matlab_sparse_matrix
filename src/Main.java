@@ -1,8 +1,16 @@
+import cern.colt.matrix.DoubleFactory1D;
+import cern.colt.matrix.DoubleMatrix1D;
+import cern.colt.matrix.impl.SparseDoubleMatrix1D;
+import cern.colt.matrix.impl.SparseDoubleMatrix2D;
+import cern.colt.matrix.linalg.Algebra;
 import com.jmatio.io.MatFileReader;
 import com.jmatio.types.MLArray;
 import com.jmatio.types.MLSparse;
 import com.jmatio.types.MLStructure;
 
+import org.la4j.Vector;
+import org.la4j.linear.GaussianSolver;
+import org.la4j.linear.LinearSystemSolver;
 import org.la4j.matrix.sparse.CRSMatrix;
 import org.la4j.operation.MatrixVectorOperation;
 import org.la4j.operation.VectorVectorOperation;
@@ -20,7 +28,7 @@ import java.util.Map;
  */
 public class Main {
 
-    private static final String FILE_NAME = "poisson3Db.mat";
+    private static final String FILE_NAME = "poisson3Da.mat";
     private static Date start = new Date(), now = new Date();
 
     public static void main(String[] args) throws IOException {
@@ -35,37 +43,48 @@ public class Main {
         MLSparse bigA = (MLSparse) structure.getField("A");
         printLog("Completed. Found matrix " + bigA.getM() + "x" + bigA.getN() + ".");
 
-        printLog("Creating empty matrix 'A' ...");
-        CRSMatrix matrix = CRSMatrix.zero(bigA.getN(), bigA.getM());
-        printLog("Completed.");
-
         printLog("Retrieving non-zero values indexes ...");
         int rowsIndex[] = bigA.getIR();
         int colsIndex[] = bigA.getIC();
-        printLog("Completed. There are " + rowsIndex.length + " values.");
-        printLog("Setting matrix 'A' values based on non-zero values found ...");
-        for (int i=0; i<rowsIndex.length; i++) {
-            double val = bigA.get(rowsIndex[i], colsIndex[i]);
+        Double values[] = bigA.exportReal();
+        printLog("Completed. There are " + values.length + " values.");
 
-            matrix.set(rowsIndex[i], colsIndex[i], val);
-            if (i % 100 == 0)
-                printLog("## " + (i / rowsIndex.length * 100) + "%");
+        printLog("Creating empty matrix 'A' ...");
+        SparseDoubleMatrix2D matrix = new SparseDoubleMatrix2D(values.length, values.length);
+        //CRSMatrix matrix = CRSMatrix.zero(bigA.getN(), bigA.getM());
+        printLog("Completed.");
+
+        printLog("Setting matrix 'A' values based on non-zero values found ...");
+        int prevPerc = 0;
+        for (int i=0; i<rowsIndex.length; i++) {
+            matrix.set(rowsIndex[i], colsIndex[i], values[i]);
+
+            int newPerc = (int) ((double)i / (double)rowsIndex.length * 100.0);
+            if (newPerc > prevPerc) {
+                printLog("## " + newPerc + "%");
+                prevPerc = newPerc;
+            }
         }
         printLog("Completed.");
 
         printLog("Computing A*x ...");
-        MatrixVectorOperation matrixVectorMultiply = new OoPlaceMatrixByVectorMultiplication();
-        DenseVector x = DenseVector.constant(bigA.getM(), 1.0);
-        DenseVector smallB = (DenseVector) matrix.multiply(x);
+        //Vector x = Vector.constant(bigA.getM(), 1.0);
+        //Vector smallB = matrix * x;
+        DoubleMatrix1D x = DoubleFactory1D.dense.make(matrix.columns(), 1);
+        DoubleMatrix1D smallB = matrix.zMult(x, null);
         printLog("Completed.");
 
-        printLog("Computing A*b ...");
-        DenseVector Xe = (DenseVector) matrixVectorMultiply.apply(matrix, smallB);
+        printLog("Solving A with b ...");
+
+        //LinearSystemSolver solver = new GaussianSolver(matrix);
+        //printLog("POSSO? " + solver.applicableTo(matrix));
+        //Vector Xe = solver.solve(smallB);
+        Algebra algebra = new Algebra();
+        DoubleMatrix1D Xe = ;
         printLog("Completed.");
 
         printLog("Computing x-Xe ...");
-        VectorVectorOperation vectorVectorSub = new OoPlaceVectorsSubtraction();
-        DenseVector ris = (DenseVector) vectorVectorSub.apply(x, Xe);
+        Vector ris = x.subtract(Xe);
         printLog("Completed.");
 
         printLog("Computing ||x-Xe|| - ||Xe|| ...");
